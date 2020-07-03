@@ -10,8 +10,7 @@ services:
     command: "go run sample.go"
 
   pprof_view:
-    build:
-      context: .
+    image: "jimako1989/gke-template"
     ports: 
       - "8081:80"
     depends_on: 
