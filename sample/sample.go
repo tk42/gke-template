@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	_ "net/http/pprof"
 	"time"
 
@@ -27,7 +28,11 @@ func worker() {
 }
 
 func main() {
+	log.Println("Hello world!")
+
 	profiler.GetProfiler()
+
+	log.Println("Finished set up profiler")
 
 	for {
 		go worker()
