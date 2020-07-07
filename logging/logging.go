@@ -22,7 +22,7 @@ var (
 )
 
 func GetLogger(name string) zap.Logger {
-	setLevel := env.GetString("LOGLEVEL", env.GetString(strings.ToUpper(name)+"_LOGLEVEL", ""))
+	setLevel := env.GetString(strings.ToUpper(name)+"_LOGLEVEL", env.GetString("LOGLEVEL", ""))
 
 	level := zap.NewAtomicLevel()
 	switch setLevel {
