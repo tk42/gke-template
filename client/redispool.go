@@ -19,7 +19,7 @@ type Pool struct {
 }
 
 var once sync.Once
-var p *Pool
+var redisConnPool *Pool
 
 func GetRedisConnPool() *Pool {
 	once.Do(func() {
@@ -27,9 +27,9 @@ func GetRedisConnPool() *Pool {
 		address := env.GetString("REDIS_HOST", "localhost") + ":" + env.GetString("REDIS_PORT", "6379")
 		logger.Info("Loaded Redis address", zap.String("address", address))
 
-		p := &Pool{}
+		redisConnPool := &Pool{}
 
-		p.redisPool = &redis.Pool{
+		redisConnPool.redisPool = &redis.Pool{
 			MaxIdle:     env.GetInt("REDIS_MAX_IDLE_NUM", 20),
 			MaxActive:   env.GetInt("REDIS_MAX_ACTIVE_NUM", 20),
 			Wait:        false, // true: blocking until the number of connections is under MaxActive
@@ -41,7 +41,7 @@ func GetRedisConnPool() *Pool {
 
 		logger.Info("Starting to connect to Redis", zap.String("address", address))
 	})
-	return p
+	return redisConnPool
 }
 
 // Get gets a connection with redis
