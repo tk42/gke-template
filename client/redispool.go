@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 	"github.com/jimako1989/gke-template/env"
 	"github.com/jimako1989/gke-template/logging"
 	dockertest "github.com/ory/dockertest/v3"
