@@ -1,64 +1,85 @@
 package client
 
 import (
+	"context"
+	"log"
 	"sync"
 	"time"
 
-	redigo "github.com/garyburd/redigo/redis"
+	"github.com/garyburd/redigo/redis"
 	"github.com/jimako1989/gke-template/env"
 	"github.com/jimako1989/gke-template/logging"
+	dockertest "github.com/ory/dockertest/v3"
 	"go.uber.org/zap"
 )
 
-type RedigoPool interface {
-	Get() redigo.Conn
-	Close() error
-}
-
-// MEMO: Pool handles connection pool. cf:https://qiita.com/riverplus/items/12f9b37cf1795d9bdbb1
-type RedisConnPool struct {
-	logger zap.Logger
-	pool   RedigoPool
+// Pool contains dockertest and redis connection pool
+type Pool struct {
+	logger     zap.Logger
+	redisPool  *redis.Pool
+	dockerPool *dockertest.Pool
+	dockerRes  *dockertest.Resource
 }
 
 var once sync.Once
-var redisConn *RedisConnPool
+var p *Pool
 
-func GetRedisConnPool() *RedisConnPool {
+func GetRedisConnPool() *Pool {
 	once.Do(func() {
 		logger := logging.GetLogger("RedisConn")
 		address := env.GetString("REDIS_HOST", "localhost") + ":" + env.GetString("REDIS_PORT", "6379")
 		logger.Info("Loaded Redis address", zap.String("address", address))
-		pool := &redigo.Pool{
+
+		p := &Pool{}
+
+		var err error
+		p.dockerPool, err = dockertest.NewPool("")
+		if err != nil {
+			logger.Fatal("could not connect to docker", zap.Error(err))
+		}
+
+		p.dockerRes, err = p.dockerPool.Run("redis", "4.0.2-alpine", nil)
+		if err != nil {
+			logger.Fatal("could not start resource", zap.Error(err))
+		}
+
+		p.redisPool = &redis.Pool{
 			MaxIdle:     env.GetInt("REDIS_MAX_IDLE_NUM", 20),
 			MaxActive:   env.GetInt("REDIS_MAX_ACTIVE_NUM", 20),
 			Wait:        false, // true: blocking until the number of connections is under MaxActive
 			IdleTimeout: 240 * time.Second,
-			Dial: func() (redigo.Conn, error) {
-				return redigo.Dial("tcp", address)
+			Dial: func() (redis.Conn, error) {
+				return redis.Dial("tcp", address)
 			},
 		}
-		logger.Info("Starting to connect to Redis", zap.String("address", address))
 
-		redisConn = &RedisConnPool{
-			logger: logger,
-			pool:   pool,
+		if err = p.dockerPool.Retry(func() error {
+			conn := p.Get()
+			defer conn.Close()
+			_, err := conn.Do("PING")
+
+			return err
+		}); err != nil {
+			log.Fatalf("could not connect to docker: %s", err)
 		}
+
+		logger.Info("Starting to connect to Redis", zap.String("address", address))
 	})
-	return redisConn
+	return p
 }
 
-func (rcp *RedisConnPool) getConn() redigo.Conn {
-	var redisConn redigo.Conn
+// Get gets a connection with redis
+func (p *Pool) Get() redis.Conn {
+	var redisConn redis.Conn
 	for {
-		redisConn = rcp.pool.Get()
+		redisConn = p.redisPool.Get()
 		if redisConn.Err() != nil {
-			rcp.logger.Error("Failed to get a connection from Redis pool", zap.Error(redisConn.Err()))
+			p.logger.Error("Failed to get a connection from Redis pool", zap.Error(redisConn.Err()))
 			time.Sleep(1 * time.Minute)
 			continue
 		}
 		if redisConn == nil {
-			rcp.logger.Error("Failed to get redis connection")
+			p.logger.Error("Failed to get redis connection")
 			time.Sleep(1 * time.Minute)
 			continue
 		}
@@ -67,9 +88,43 @@ func (rcp *RedisConnPool) getConn() redigo.Conn {
 	return redisConn
 }
 
-func GetConn(tableNo string) redigo.Conn {
-	rcp := GetRedisConnPool()
-	conn := rcp.getConn()
+// GetContext gets a connection with redis
+func (p *Pool) GetContext(ctx context.Context) (redis.Conn, error) {
+	return p.redisPool.GetContext(ctx)
+}
+
+// GetPool gets a connection pool with redis
+func (p *Pool) GetPool() *redis.Pool {
+	return p.redisPool
+}
+
+// Cleanup remove all data in redis
+func (p *Pool) Cleanup() error {
+	conn := p.Get()
+	defer conn.Close()
+	_, err := conn.Do("FLUSHALL")
+	return err
+}
+
+// Close closes redis connection pool and dockertest pool
+func (p *Pool) Close() {
+	var errs []error
+	if err := p.Cleanup(); err != nil {
+		errs = append(errs, err)
+	}
+	if err := p.redisPool.Close(); err != nil {
+		errs = append(errs, err)
+	}
+	if err := p.dockerPool.Purge(p.dockerRes); err != nil {
+		errs = append(errs, err)
+	}
+	if len(errs) > 0 {
+		log.Fatalf("unexpected error: %v", errs[0])
+	}
+}
+
+func GetConn(tableNo string) redis.Conn {
+	conn := GetRedisConnPool().Get()
 	conn.Do("SELECT", tableNo)
 	return conn
 }
