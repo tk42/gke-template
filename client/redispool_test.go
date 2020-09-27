@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 )
 
 func Test_GetConn(t *testing.T) {
