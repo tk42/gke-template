@@ -9,16 +9,13 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/jimako1989/gke-template/env"
 	"github.com/jimako1989/gke-template/logging"
-	dockertest "github.com/ory/dockertest/v3"
 	"go.uber.org/zap"
 )
 
 // Pool contains dockertest and redis connection pool
 type Pool struct {
-	logger     zap.Logger
-	redisPool  *redis.Pool
-	dockerPool *dockertest.Pool
-	dockerRes  *dockertest.Resource
+	logger    zap.Logger
+	redisPool *redis.Pool
 }
 
 var once sync.Once
@@ -32,17 +29,6 @@ func GetRedisConnPool() *Pool {
 
 		p := &Pool{}
 
-		var err error
-		p.dockerPool, err = dockertest.NewPool("")
-		if err != nil {
-			logger.Fatal("could not connect to docker", zap.Error(err))
-		}
-
-		p.dockerRes, err = p.dockerPool.Run("redis", "4.0.2-alpine", nil)
-		if err != nil {
-			logger.Fatal("could not start resource", zap.Error(err))
-		}
-
 		p.redisPool = &redis.Pool{
 			MaxIdle:     env.GetInt("REDIS_MAX_IDLE_NUM", 20),
 			MaxActive:   env.GetInt("REDIS_MAX_ACTIVE_NUM", 20),
@@ -51,16 +37,6 @@ func GetRedisConnPool() *Pool {
 			Dial: func() (redis.Conn, error) {
 				return redis.Dial("tcp", address)
 			},
-		}
-
-		if err = p.dockerPool.Retry(func() error {
-			conn := p.Get()
-			defer conn.Close()
-			_, err := conn.Do("PING")
-
-			return err
-		}); err != nil {
-			log.Fatalf("could not connect to docker: %s", err)
 		}
 
 		logger.Info("Starting to connect to Redis", zap.String("address", address))
@@ -113,9 +89,6 @@ func (p *Pool) Close() {
 		errs = append(errs, err)
 	}
 	if err := p.redisPool.Close(); err != nil {
-		errs = append(errs, err)
-	}
-	if err := p.dockerPool.Purge(p.dockerRes); err != nil {
 		errs = append(errs, err)
 	}
 	if len(errs) > 0 {
