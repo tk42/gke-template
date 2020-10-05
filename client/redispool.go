@@ -21,7 +21,7 @@ type Pool struct {
 }
 
 var (
-	once          *sync.Once
+	once          = new(sync.Once)
 	redisConnPool *Pool
 )
 
