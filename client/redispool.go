@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/jimako1989/gke-template/env"
 	"github.com/jimako1989/gke-template/logging"
+	dockertest "github.com/ory/dockertest/v3"
 	"go.uber.org/zap"
 )
 
@@ -19,15 +21,36 @@ type Pool struct {
 }
 
 var (
-	once          sync.Once
+	once          *sync.Once
 	redisConnPool *Pool
 )
 
 func GetRedisConnPool() *Pool {
 	once.Do(func() {
 		logger := logging.GetLogger("RedisConn")
-		address := env.GetString("REDIS_HOST", "localhost") + ":" + env.GetString("REDIS_PORT", "6379")
-		logger.Info("Loaded Redis address", zap.String("address", address))
+		isTest := env.GetBoolean("TEST_ENV", true)
+
+		var dialFunc func() (redis.Conn, error)
+		if isTest {
+			dockerPool, err := dockertest.NewPool("")
+			if err != nil {
+				logger.Fatal("could not connect to docker", zap.Error(err))
+			}
+			dockerRes, err := dockerPool.Run("redis", "5.0", nil)
+			if err != nil {
+				logger.Fatal("could not start resource", zap.Error(err))
+			}
+			logger.Info("Loaded Test Redis")
+			dialFunc = func() (redis.Conn, error) {
+				return redis.DialURL(fmt.Sprintf("redis://localhost:%s", dockerRes.GetPort("6379/tcp")))
+			}
+		} else {
+			address := env.GetString("REDIS_HOST", "localhost") + ":" + env.GetString("REDIS_PORT", "6379")
+			logger.Info("Loaded Redis address", zap.String("address", address))
+			dialFunc = func() (redis.Conn, error) {
+				return redis.Dial("tcp", address)
+			}
+		}
 
 		redisConnPool = &Pool{
 			redisPool: &redis.Pool{
@@ -35,13 +58,11 @@ func GetRedisConnPool() *Pool {
 				MaxActive:   env.GetInt("REDIS_MAX_ACTIVE_NUM", 20),
 				Wait:        false, // true: blocking until the number of connections is under MaxActive
 				IdleTimeout: 240 * time.Second,
-				Dial: func() (redis.Conn, error) {
-					return redis.Dial("tcp", address)
-				},
+				Dial:        dialFunc,
 			},
 		}
 
-		logger.Info("Starting to connect to Redis", zap.String("address", address))
+		logger.Info("Starting to connect to Redis")
 	})
 	return redisConnPool
 }
@@ -98,8 +119,8 @@ func (p *Pool) Close() {
 	}
 }
 
-func GetConn(tableNo string) redis.Conn {
+func GetConn(dbNo string) redis.Conn {
 	conn := GetRedisConnPool().Get()
-	conn.Do("SELECT", tableNo)
+	conn.Do("SELECT", dbNo)
 	return conn
 }
