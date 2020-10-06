@@ -53,6 +53,7 @@ func GetRedisConnPool() *Pool {
 		}
 
 		redisConnPool = &Pool{
+			logger: logger,
 			redisPool: &redis.Pool{
 				MaxIdle:     env.GetInt("REDIS_MAX_IDLE_NUM", 20),
 				MaxActive:   env.GetInt("REDIS_MAX_ACTIVE_NUM", 20),
