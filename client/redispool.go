@@ -69,24 +69,24 @@ func GetRedisConnPool() *Pool {
 }
 
 // Get gets a connection with redis
-func (p *Pool) Get() redis.Conn {
-	var redisConn redis.Conn
-	for {
-		redisConn = p.redisPool.Get()
-		if redisConn.Err() != nil {
-			p.logger.Error("Failed to get a connection from Redis pool", zap.Error(redisConn.Err()))
-			time.Sleep(1 * time.Minute)
-			continue
-		}
-		if redisConn == nil {
-			p.logger.Error("Failed to get redis connection")
-			time.Sleep(1 * time.Minute)
-			continue
-		}
-		break
-	}
-	return redisConn
-}
+// func (p *Pool) Get() redis.Conn {
+// 	var redisConn redis.Conn
+// 	for {
+// 		redisConn = p.redisPool.Get()
+// 		if redisConn.Err() != nil {
+// 			p.logger.Error("Failed to get a connection from Redis pool", zap.Error(redisConn.Err()))
+// 			time.Sleep(1 * time.Minute)
+// 			continue
+// 		}
+// 		if redisConn == nil {
+// 			p.logger.Error("Failed to get redis connection")
+// 			time.Sleep(1 * time.Minute)
+// 			continue
+// 		}
+// 		break
+// 	}
+// 	return redisConn
+// }
 
 // GetContext gets a connection with redis
 func (p *Pool) GetContext(ctx context.Context) (redis.Conn, error) {
@@ -100,9 +100,12 @@ func (p *Pool) GetPool() *redis.Pool {
 
 // Cleanup remove all data in redis
 func (p *Pool) Cleanup() error {
-	conn := p.Get()
+	conn, err := p.GetContext(nil)
+	if err != nil {
+		return err
+	}
 	defer conn.Close()
-	_, err := conn.Do("FLUSHALL")
+	_, err = conn.Do("FLUSHALL")
 	return err
 }
 
@@ -120,8 +123,8 @@ func (p *Pool) Close() {
 	}
 }
 
-func GetConn(dbNo string) redis.Conn {
-	conn := GetRedisConnPool().Get()
-	conn.Do("SELECT", dbNo)
-	return conn
-}
+// func GetConn(dbNo string) redis.Conn {
+// 	conn := GetRedisConnPool().Get()
+// 	conn.Do("SELECT", dbNo)
+// 	return conn
+// }

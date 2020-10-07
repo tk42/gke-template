@@ -16,7 +16,7 @@ func Test_GetConn(t *testing.T) {
 	os.Setenv("TEST_ENV", "false")
 
 	p := GetRedisConnPool()
-	c := p.Get()
+	c, _ := p.GetContext(nil)
 	s, _ := redis.Strings(c.Do("KEYS", "*"))
 	fmt.Println(s)
 	// Output:
@@ -30,7 +30,7 @@ func Test_GetConn_Test(t *testing.T) {
 	os.Setenv("TEST_ENV", "true")
 
 	p := GetRedisConnPool()
-	c := p.Get()
+	c, _ := p.GetContext(nil)
 	s, _ := redis.Strings(c.Do("KEYS", "*"))
 	fmt.Println(s)
 	// Output:
