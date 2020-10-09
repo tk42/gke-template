@@ -126,6 +126,7 @@ func (p *Pool) Close() {
 		if err := p.dockerRes.Close(); err != nil {
 			errs = append(errs, err)
 		}
+		once = new(sync.Once)
 	}
 	if len(errs) > 0 {
 		log.Fatalf("unexpected error: %v", errs[0])
