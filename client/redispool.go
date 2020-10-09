@@ -18,6 +18,7 @@ import (
 type Pool struct {
 	logger    zap.Logger
 	redisPool *redis.Pool
+	dockerRes *dockertest.Resource
 }
 
 var (
@@ -30,13 +31,15 @@ func GetRedisConnPool() *Pool {
 		logger := logging.GetLogger("RedisConn")
 		isTest := env.GetBoolean("TEST_ENV", true)
 
+		var dockerRes *dockertest.Resource
+
 		var dialFunc func() (redis.Conn, error)
 		if isTest {
 			dockerPool, err := dockertest.NewPool("")
 			if err != nil {
 				logger.Fatal("could not connect to docker", zap.Error(err))
 			}
-			dockerRes, err := dockerPool.Run("redis", "5.0", nil)
+			dockerRes, err = dockerPool.Run("redis", "5.0", nil)
 			if err != nil {
 				logger.Fatal("could not start resource", zap.Error(err))
 			}
@@ -61,6 +64,7 @@ func GetRedisConnPool() *Pool {
 				IdleTimeout: 240 * time.Second,
 				Dial:        dialFunc,
 			},
+			dockerRes: dockerRes,
 		}
 
 		logger.Info("Starting to connect to Redis")
@@ -117,6 +121,11 @@ func (p *Pool) Close() {
 	}
 	if err := p.redisPool.Close(); err != nil {
 		errs = append(errs, err)
+	}
+	if p.dockerRes != nil {
+		if err := p.dockerRes.Close(); err != nil {
+			errs = append(errs, err)
+		}
 	}
 	if len(errs) > 0 {
 		log.Fatalf("unexpected error: %v", errs[0])
