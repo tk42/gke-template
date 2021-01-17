@@ -48,8 +48,13 @@ func GetRedisConnPool() *Pool {
 				return redis.DialURL(fmt.Sprintf("redis://localhost:%s", dockerRes.GetPort("6379/tcp")))
 			}
 		} else {
-			address := env.GetString("REDIS_HOST", "localhost") + ":" + env.GetString("REDIS_PORT", "6379")
-			logger.Info("Loaded Redis address", zap.String("address", address))
+			host := env.GetString("REDIS_HOST", "localhost")
+			address := host + ":" + env.GetString("REDIS_PORT", "6379")
+			if host == "localhost" {
+				logger.Warn("Loaded Redis(localhost) address", zap.String("address", address))
+			} else {
+				logger.Info("Loaded Redis address", zap.String("address", address))
+			}
 			dialFunc = func() (redis.Conn, error) {
 				return redis.Dial("tcp", address)
 			}
