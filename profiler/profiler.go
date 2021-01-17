@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/jimako1989/gke-template/env"
+	"github.com/tk42/gke-template/env"
 )
 
 var once sync.Once

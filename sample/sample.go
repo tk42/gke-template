@@ -5,7 +5,7 @@ import (
 	_ "net/http/pprof"
 	"time"
 
-	"github.com/jimako1989/gke-template/profiler"
+	"github.com/tk42/gke-template/profiler"
 )
 
 func NewCounter() <-chan int {

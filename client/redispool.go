@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/gomodule/redigo/redis"
-	"github.com/jimako1989/gke-template/env"
-	"github.com/jimako1989/gke-template/logging"
 	dockertest "github.com/ory/dockertest/v3"
+	"github.com/tk42/gke-template/env"
+	"github.com/tk42/gke-template/logging"
 	"go.uber.org/zap"
 )
 
