@@ -4,6 +4,7 @@ import (
 	"math"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func GetBoolean(key string, defaultValue bool) bool {
@@ -36,6 +37,22 @@ func GetInt(key string, defaultValue int) int {
 		panic(err)
 	}
 	return r
+}
+
+func GetInts(key string, delimiter string, defaultValue []int) []int {
+	vals, ok := os.LookupEnv(key)
+	if !ok {
+		return defaultValue
+	}
+	var ints []int
+	for _, s := range strings.Split(vals, delimiter) {
+		val, err := strconv.Atoi(s)
+		if err != nil {
+			panic(err)
+		}
+		ints = append(ints, val)
+	}
+	return ints
 }
 
 func GetFloat64(key string, defaultValue float64) float64 {
