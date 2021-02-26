@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tk42/gke-template/env"
+	"github.com/tk42/victolinux/env"
 	stackdriver "github.com/tommy351/zap-stackdriver"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

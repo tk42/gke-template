@@ -10,7 +10,7 @@ services:
     command: "go run sample.go"
 
   pprof_view:
-    image: "tk42/gke-template"
+    image: "tk42/victolinux"
     ports: 
       - "8081:80"
     depends_on: 

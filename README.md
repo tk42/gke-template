@@ -1,14 +1,13 @@
-# gke-template
-
+# victolinux
 ## Include packages
- - env "github.com/tk42/gke-template/env"
- - logging "github.com/tk42/gke-template/logging"
- - redispool "github.com/tk42/gke-template/client"
- - profiler "github.com/tk42/gke-template/profiler"
+ - env "github.com/tk42/victolinux/env"
+ - logging "github.com/tk42/victolinux/logging"
+ - redispool "github.com/tk42/victolinux/client"
+ - profiler "github.com/tk42/victolinux/profiler"
 
-## How to use
+## profiler
 ```
-cd sample
+cd profiler
 docker-compose up
 ```
 Then access "http://localhost:8081/"

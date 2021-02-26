@@ -9,8 +9,8 @@ import (
 
 	"github.com/gomodule/redigo/redis"
 	dockertest "github.com/ory/dockertest/v3"
-	"github.com/tk42/gke-template/env"
-	"github.com/tk42/gke-template/logging"
+	"github.com/tk42/victolinux/env"
+	"github.com/tk42/victolinux/logging"
 	"go.uber.org/zap"
 )
 

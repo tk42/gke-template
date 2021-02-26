@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/tk42/gke-template/env"
+	"github.com/tk42/victolinux/env"
 )
 
 var once sync.Once
