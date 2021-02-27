@@ -77,26 +77,6 @@ func GetRedisConnPool() *Pool {
 	return redisConnPool
 }
 
-// Get gets a connection with redis
-// func (p *Pool) Get() redis.Conn {
-// 	var redisConn redis.Conn
-// 	for {
-// 		redisConn = p.redisPool.Get()
-// 		if redisConn.Err() != nil {
-// 			p.logger.Error("Failed to get a connection from Redis pool", zap.Error(redisConn.Err()))
-// 			time.Sleep(1 * time.Minute)
-// 			continue
-// 		}
-// 		if redisConn == nil {
-// 			p.logger.Error("Failed to get redis connection")
-// 			time.Sleep(1 * time.Minute)
-// 			continue
-// 		}
-// 		break
-// 	}
-// 	return redisConn
-// }
-
 // GetContext gets a connection with redis
 func (p *Pool) GetContext(ctx context.Context) (redis.Conn, error) {
 	return p.redisPool.GetContext(ctx)
@@ -137,9 +117,3 @@ func (p *Pool) Close() {
 		log.Fatalf("unexpected error: %v", errs[0])
 	}
 }
-
-// func GetConn(dbNo string) redis.Conn {
-// 	conn := GetRedisConnPool().Get()
-// 	conn.Do("SELECT", dbNo)
-// 	return conn
-// }
