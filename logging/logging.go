@@ -17,6 +17,7 @@ type Logger struct {
 	*zap.Logger
 	isDebugEnabled bool
 	isInfoEnabled  bool
+	throttleConfig throttle.ThrottleConfig
 	throttler      throttle.Throttle
 }
 
@@ -70,9 +71,16 @@ func GetLogger(name string) *Logger {
 	if err != nil {
 		panic(err)
 	}
+
+	defaultPolicy := throttle.ThrottleConfig{
+		setCount, time.Duration(setWindow) * time.Millisecond,
+		func() {
+			panic(fmt.Sprintf("DETECTED THROTTLE CHECK: %v COUNT WITHIN %v MSEC", setCount, setWindow))
+		},
+		nil,
+	}
 	logger := &Logger{
-		zaplogger.Named(name), isDebugEnabled, isInfoEnabled,
-		throttle.GetThrottleSuppress(setCount, time.Duration(setWindow)*time.Millisecond),
+		zaplogger.Named(name), isDebugEnabled, isInfoEnabled, defaultPolicy, throttle.NewThrottle(defaultPolicy),
 	}
 
 	logger.Info("Successfully created Config and Logger",
@@ -82,12 +90,17 @@ func GetLogger(name string) *Logger {
 	return logger
 }
 
+func (l *Logger) GetThrottleConfig() throttle.ThrottleConfig {
+	return l.throttleConfig
+}
+
+func (l *Logger) SetThrottleConfig(cfg throttle.ThrottleConfig) {
+	l.throttleConfig = cfg
+	l.throttler = throttle.NewThrottle(cfg)
+}
+
 func (l *Logger) Debug(msg string, fields ...zapcore.Field) {
 	if !l.isDebugEnabled {
-		return
-	}
-	l.throttler.Trigger()
-	if l.throttler.IsFreeze() {
 		return
 	}
 	l.Debug(msg, fields...)
@@ -95,10 +108,6 @@ func (l *Logger) Debug(msg string, fields ...zapcore.Field) {
 
 func (l *Logger) Info(msg string, fields ...zapcore.Field) {
 	if !l.isInfoEnabled {
-		return
-	}
-	l.throttler.Trigger()
-	if l.throttler.IsFreeze() {
 		return
 	}
 	l.Info(msg, fields...)
