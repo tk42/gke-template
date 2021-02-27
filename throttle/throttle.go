@@ -9,6 +9,7 @@ import (
 // and for stopping the throttler.
 type Throttle interface {
 	Trigger()
+	IsFreeze() bool
 }
 
 func NewThrottle(cfg ThrottleConfig) Throttle {
