@@ -104,14 +104,14 @@ func (l *Logger) Debug(msg string, fields ...zapcore.Field) {
 	if !l.isDebugEnabled {
 		return
 	}
-	l.Debug(msg, fields...)
+	l.Logger.Debug(msg, fields...)
 }
 
 func (l *Logger) Info(msg string, fields ...zapcore.Field) {
 	if !l.isInfoEnabled {
 		return
 	}
-	l.Info(msg, fields...)
+	l.Logger.Info(msg, fields...)
 }
 
 func (l *Logger) Warn(msg string, fields ...zapcore.Field) {
@@ -119,7 +119,7 @@ func (l *Logger) Warn(msg string, fields ...zapcore.Field) {
 	if l.throttler.IsFreeze() {
 		return
 	}
-	l.Warn(msg, fields...)
+	l.Logger.Warn(msg, fields...)
 }
 
 func (l *Logger) Panic(msg string, fields ...zapcore.Field) {
@@ -127,7 +127,7 @@ func (l *Logger) Panic(msg string, fields ...zapcore.Field) {
 	if l.throttler.IsFreeze() {
 		return
 	}
-	l.Panic(msg, fields...)
+	l.Logger.Panic(msg, fields...)
 }
 
 func (l *Logger) Fatal(msg string, fields ...zapcore.Field) {
@@ -135,5 +135,5 @@ func (l *Logger) Fatal(msg string, fields ...zapcore.Field) {
 	if l.throttler.IsFreeze() {
 		return
 	}
-	l.Fatal(msg, fields...)
+	l.Logger.Fatal(msg, fields...)
 }
