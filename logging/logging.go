@@ -24,8 +24,10 @@ const (
 	TIME_FORMAT = "2006-01-02_15:04:05"
 )
 
-func GetLogger(name string, cfg throttle.ThrottleConfig) *Logger {
+func GetLogger(name string) *Logger {
 	setLevel := env.GetString(strings.ToUpper(name)+"_LOGLEVEL", env.GetString("LOGLEVEL", ""))
+	setCount := uint(env.GetInt(strings.ToUpper(name)+"_COUNT_THRESHOLD", env.GetInt("COUNT_THRESHOLD", 30)))
+	setWindow := env.GetInt(strings.ToUpper(name)+"_WINDOW_MSEC_THRESHOLD", env.GetInt("WINDOW_MSEC_THRESHOLD", 1000))
 
 	level := zap.NewAtomicLevel()
 	isDebugEnabled, isInfoEnabled := false, false
@@ -69,7 +71,8 @@ func GetLogger(name string, cfg throttle.ThrottleConfig) *Logger {
 		panic(err)
 	}
 	logger := &Logger{
-		zaplogger.Named(name), isDebugEnabled, isInfoEnabled, throttle.NewThrottle(cfg),
+		zaplogger.Named(name), isDebugEnabled, isInfoEnabled,
+		throttle.GetThrottleSuppress(setCount, time.Duration(setWindow)*time.Millisecond),
 	}
 
 	logger.Info("Successfully created Config and Logger",
@@ -84,6 +87,9 @@ func (l *Logger) Debug(msg string, fields ...zapcore.Field) {
 		return
 	}
 	l.throttler.Trigger()
+	if l.throttler.IsFreeze() {
+		return
+	}
 	l.Debug(msg, fields...)
 }
 
@@ -92,20 +98,32 @@ func (l *Logger) Info(msg string, fields ...zapcore.Field) {
 		return
 	}
 	l.throttler.Trigger()
+	if l.throttler.IsFreeze() {
+		return
+	}
 	l.Info(msg, fields...)
 }
 
 func (l *Logger) Warn(msg string, fields ...zapcore.Field) {
 	l.throttler.Trigger()
+	if l.throttler.IsFreeze() {
+		return
+	}
 	l.Warn(msg, fields...)
 }
 
 func (l *Logger) Panic(msg string, fields ...zapcore.Field) {
 	l.throttler.Trigger()
+	if l.throttler.IsFreeze() {
+		return
+	}
 	l.Panic(msg, fields...)
 }
 
 func (l *Logger) Fatal(msg string, fields ...zapcore.Field) {
 	l.throttler.Trigger()
+	if l.throttler.IsFreeze() {
+		return
+	}
 	l.Fatal(msg, fields...)
 }

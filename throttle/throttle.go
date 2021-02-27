@@ -64,3 +64,7 @@ func (t *throttler) Trigger() {
 		})
 	}
 }
+
+func (t *throttler) IsFreeze() bool {
+	return t.freeze
+}
