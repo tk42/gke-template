@@ -16,7 +16,7 @@ import (
 
 // Pool contains dockertest and redis connection pool
 type Pool struct {
-	logger    zap.Logger
+	logger    *logging.Logger
 	redisPool *redis.Pool
 	dockerRes *dockertest.Resource
 }
