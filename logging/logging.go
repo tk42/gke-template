@@ -87,6 +87,7 @@ func GetLogger(name string) *Logger {
 	logger.Info("Successfully created Config and Logger",
 		zap.String("name", name), zap.String("loglevel", setLevel),
 		zap.Bool("IsDebugEnabled", isDebugEnabled), zap.Bool("IsInfoEnabled", isInfoEnabled),
+		zap.Uint("ThrottleCount", setCount), zap.Int("ThrottleWindow", setWindow),
 	)
 	return logger
 }
@@ -120,6 +121,14 @@ func (l *Logger) Warn(msg string, fields ...zapcore.Field) {
 		return
 	}
 	l.Logger.Warn(msg, fields...)
+}
+
+func (l *Logger) Error(msg string, fields ...zapcore.Field) {
+	l.throttler.Trigger()
+	if l.throttler.IsFreeze() {
+		return
+	}
+	l.Logger.Error(msg, fields...)
 }
 
 func (l *Logger) Panic(msg string, fields ...zapcore.Field) {
