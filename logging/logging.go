@@ -72,13 +72,14 @@ func GetLogger(name string) *Logger {
 		panic(err)
 	}
 
-	defaultPolicy := throttle.ThrottleConfig{
-		setCount, time.Duration(setWindow) * time.Millisecond,
-		func() {
-			panic(fmt.Sprintf("DETECTED THROTTLE CHECK: %v COUNT WITHIN %v MSEC", setCount, setWindow))
-		},
-		nil,
-	}
+	defaultPolicy := throttle.ThrottleParameter(
+		setCount, time.Duration(setWindow)*time.Millisecond,
+		throttle.Reached(
+			func() {
+				panic(fmt.Sprintf("DETECTED THROTTLE CHECK: %v COUNT WITHIN %v MSEC", setCount, setWindow))
+			},
+		),
+	)
 	logger := &Logger{
 		zaplogger.Named(name), isDebugEnabled, isInfoEnabled, defaultPolicy, throttle.NewThrottle(defaultPolicy),
 	}
