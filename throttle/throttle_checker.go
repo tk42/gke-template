@@ -14,12 +14,3 @@ func GetThrottleExit(count uint, period time.Duration) Throttle {
 			nil,
 		})
 }
-
-func GetThrottle(count uint, period time.Duration, reached func(), released func()) Throttle {
-	return NewThrottle(
-		ThrottleConfig{
-			count, period,
-			reached,
-			released,
-		})
-}

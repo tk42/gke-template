@@ -11,14 +11,14 @@ var (
 )
 
 func ThrottleTemplate(thres_count uint, interval int64, try_count int) {
-	throttle := GetThrottle(thres_count, period,
-		func() {
+	throttle := NewThrottle(ThrottleParameter(thres_count, period,
+		Reached(func() {
 			fmt.Printf("reached\t%v\n", time.Now())
-		},
-		func() {
+		}),
+		Released(func() {
 			fmt.Printf("released\t%v\n", time.Now())
-		},
-	)
+		}),
+	))
 
 	go func() {
 		for i := 0; i < try_count; i++ {

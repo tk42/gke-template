@@ -25,7 +25,7 @@ func Released(f func()) ThrottleOption {
 	}
 }
 
-func OrderParameter(count uint, period time.Duration, ops ...ThrottleOption) *ThrottleConfig {
+func ThrottleParameter(count uint, period time.Duration, ops ...ThrottleOption) ThrottleConfig {
 	params := ThrottleConfig{
 		count:         count,
 		period:        period,
@@ -35,5 +35,5 @@ func OrderParameter(count uint, period time.Duration, ops ...ThrottleOption) *Th
 	for _, option := range ops {
 		option(&params)
 	}
-	return &params
+	return params
 }
