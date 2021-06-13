@@ -22,7 +22,7 @@ type Logger struct {
 }
 
 const (
-	TIME_FORMAT = "2006-01-02_15:04:05"
+	TIME_FORMAT = "20060102_150405"
 )
 
 func GetLogger(name string) *Logger {
@@ -55,8 +55,12 @@ func GetLogger(name string) *Logger {
 		os.Setenv("CREATE_TIME", createTime)
 	}
 
+	if processName, ok := os.LookupEnv("PROCESS_NAME"); ok {
+		createTime = processName + "_" + createTime
+	}
+
 	initialFields := map[string]interface{}{
-		"ProcessName": env.GetString("PROCESS_NAME", "") + "_" + createTime,
+		"ProcessName": createTime,
 	}
 
 	myConfig := zap.Config{
