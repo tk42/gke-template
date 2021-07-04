@@ -60,7 +60,7 @@ func GetInt32(key string, defaultValue int32) int32 {
 	if err != nil {
 		panic(err)
 	}
-	return r
+	return int32(r)
 }
 
 func GetInt16(key string, defaultValue int16) int16 {
@@ -72,7 +72,7 @@ func GetInt16(key string, defaultValue int16) int16 {
 	if err != nil {
 		panic(err)
 	}
-	return r
+	return int16(r)
 }
 
 func GetInt8(key string, defaultValue int8) int8 {
@@ -84,7 +84,7 @@ func GetInt8(key string, defaultValue int8) int8 {
 	if err != nil {
 		panic(err)
 	}
-	return r
+	return int8(r)
 }
 
 func GetUint(key string, defaultValue uint) uint {
@@ -120,7 +120,7 @@ func GetUint32(key string, defaultValue uint32) uint32 {
 	if err != nil {
 		panic(err)
 	}
-	return r
+	return uint32(r)
 }
 
 func GetUint16(key string, defaultValue uint16) uint16 {
@@ -132,7 +132,7 @@ func GetUint16(key string, defaultValue uint16) uint16 {
 	if err != nil {
 		panic(err)
 	}
-	return r
+	return uint16(r)
 }
 
 func GetUint8(key string, defaultValue uint8) uint8 {
@@ -144,7 +144,7 @@ func GetUint8(key string, defaultValue uint8) uint8 {
 	if err != nil {
 		panic(err)
 	}
-	return r
+	return uint8(r)
 }
 
 func GetInts(key string, delimiter string, defaultValue []int) []int {
@@ -182,7 +182,7 @@ func GetFloat32(key string, defaultValue float32) float32 {
 	}
 	r, err := strconv.ParseFloat(val, 32)
 	if err != nil {
-		return math.NaN()
+		return float32(math.NaN())
 	}
-	return r
+	return float32(r)
 }
