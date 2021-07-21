@@ -4,7 +4,7 @@ type PoolConfiguration struct {
 	isMock               bool
 	host                 string
 	port                 string
-	db                   uint32
+	db                   int
 	maxIdleConnections   int
 	maxActiveConnections int
 }
@@ -29,7 +29,7 @@ func Port(port string) Option {
 	}
 }
 
-func DB(db uint32) Option {
+func DB(db int) Option {
 	return func(c *PoolConfiguration) {
 		c.db = db
 	}

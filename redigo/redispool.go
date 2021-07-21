@@ -2,7 +2,6 @@ package redigo
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -23,7 +22,7 @@ type Pool struct {
 var (
 	once          = new(sync.Once)
 	redisConnPool *Pool
-	PoolCache     map[uint32]*Pool
+	PoolCache     map[int]*Pool
 )
 
 func GetRedisConnPool(config PoolConfiguration) *Pool {
@@ -41,6 +40,10 @@ func GetRedisConnPoolByDB(config PoolConfiguration) *Pool {
 	return PoolCache[config.db]
 }
 
+func getAddress(host, port string) string {
+	return host + ":" + port
+}
+
 func getRedisConnPoolByDB(config PoolConfiguration) *Pool {
 	logger := logging.GetLogger("RedisConn")
 
@@ -56,20 +59,20 @@ func getRedisConnPoolByDB(config PoolConfiguration) *Pool {
 		if err != nil {
 			logger.Fatal("could not start resource", zap.Error(err))
 		}
-		address := fmt.Sprintf("redis://localhost:%s/%d", dockerRes.GetPort("6379/tcp"), config.db)
+		address := getAddress("localhost", dockerRes.GetPort("6379/tcp"))
 		logger.Info("Loaded Test Redis", zap.String("address", address))
 		dialFunc = func() (redis.Conn, error) {
-			return redis.DialURL(address)
+			return redis.Dial("tcp", address, redis.DialDatabase(config.db))
 		}
 	} else {
-		address := fmt.Sprintf("redis://%v:%v/%v", config.host, config.port, config.db)
+		address := getAddress(config.host, config.port)
 		if config.host == "localhost" {
 			logger.Warn("Loaded Redis(localhost) address", zap.String("address", address))
 		} else {
 			logger.Info("Loaded Redis address", zap.String("address", address))
 		}
 		dialFunc = func() (redis.Conn, error) {
-			return redis.Dial("tcp", address)
+			return redis.Dial("tcp", address, redis.DialDatabase(config.db))
 		}
 	}
 
