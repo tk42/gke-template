@@ -26,11 +26,10 @@ var (
 )
 
 func GetRedisConnPool(config PoolConfiguration) *Pool {
-	var pool *Pool
 	once.Do(func() {
-		pool = getRedisConnPoolByDB(config)
+		redisConnPool = getRedisConnPoolByDB(config)
 	})
-	return pool
+	return redisConnPool
 }
 
 func GetRedisConnPoolByDB(config PoolConfiguration) *Pool {
