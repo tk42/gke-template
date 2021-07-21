@@ -56,12 +56,13 @@ func getRedisConnPoolByDB(config PoolConfiguration) *Pool {
 		if err != nil {
 			logger.Fatal("could not start resource", zap.Error(err))
 		}
-		logger.Info("Loaded Test Redis")
+		address := fmt.Sprintf("redis://localhost:%s/%d", dockerRes.GetPort("6379/tcp"), config.db)
+		logger.Info("Loaded Test Redis", zap.String("address", address))
 		dialFunc = func() (redis.Conn, error) {
-			return redis.DialURL(fmt.Sprintf("redis://localhost:%s/%d", dockerRes.GetPort("6379/tcp"), config.db))
+			return redis.DialURL(address)
 		}
 	} else {
-		address := fmt.Sprintf("%v:%v/%v", config.host, config.port, config.db)
+		address := fmt.Sprintf("redis://%v:%v/%v", config.host, config.port, config.db)
 		if config.host == "localhost" {
 			logger.Warn("Loaded Redis(localhost) address", zap.String("address", address))
 		} else {
@@ -71,8 +72,6 @@ func getRedisConnPoolByDB(config PoolConfiguration) *Pool {
 			return redis.Dial("tcp", address)
 		}
 	}
-
-	logger.Info("Starting to connect to Redis")
 
 	return &Pool{
 		logger: logger,
