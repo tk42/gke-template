@@ -1,6 +1,8 @@
 package logging
 
-import "go.uber.org/zap/zapcore"
+import (
+	"go.uber.org/zap/zapcore"
+)
 
 type LoggingOption func(*LoggingParameters)
 

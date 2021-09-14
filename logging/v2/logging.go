@@ -17,7 +17,6 @@ type Logger struct {
 	*zap.Logger
 	isDebugEnabled bool
 	isInfoEnabled  bool
-	throttleConfig throttle.ThrottleConfig
 	throttler      throttle.Throttle
 }
 
@@ -80,6 +79,9 @@ func GetLogger(name string, ops ...LoggingOption) *Logger {
 		createTime = processName + "_" + createTime
 	}
 
+	if params.InitialFields == nil {
+		params.InitialFields = make(map[string]interface{})
+	}
 	initialFields := params.InitialFields
 	initialFields["ProcessName"] = createTime
 
@@ -96,7 +98,7 @@ func GetLogger(name string, ops ...LoggingOption) *Logger {
 		panic(err)
 	}
 
-	defaultPolicy := throttle.ThrottleParameter(
+	throttleCfg := throttle.ThrottleParameter(
 		params.CountThredshold, time.Duration(params.WindowThreshold)*time.Millisecond,
 		throttle.Reached(
 			func() {
@@ -104,8 +106,9 @@ func GetLogger(name string, ops ...LoggingOption) *Logger {
 			},
 		),
 	)
+
 	logger := &Logger{
-		zaplogger.Named(name), isDebugEnabled, isInfoEnabled, defaultPolicy, throttle.NewThrottle(defaultPolicy),
+		zaplogger.Named(name), isDebugEnabled, isInfoEnabled, throttle.NewThrottle(throttleCfg),
 	}
 
 	logger.Info("Successfully created Config and Logger",
@@ -114,15 +117,6 @@ func GetLogger(name string, ops ...LoggingOption) *Logger {
 		zap.Uint("ThrottleCount", params.CountThredshold), zap.Int("ThrottleWindow", params.WindowThreshold),
 	)
 	return logger
-}
-
-func (l *Logger) GetThrottleConfig() throttle.ThrottleConfig {
-	return l.throttleConfig
-}
-
-func (l *Logger) SetThrottleConfig(cfg throttle.ThrottleConfig) {
-	l.throttleConfig = cfg
-	l.throttler = throttle.NewThrottle(cfg)
 }
 
 func (l *Logger) Debug(msg string, fields ...zapcore.Field) {
