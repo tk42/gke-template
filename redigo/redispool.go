@@ -54,7 +54,7 @@ func getRedisConnPoolByDB(config PoolConfiguration) *Pool {
 		if err != nil {
 			logger.Fatal("could not connect to docker", zap.Error(err))
 		}
-		dockerRes, err = dockerPool.Run("redis", "5.0", nil)
+		dockerRes, err = dockerPool.Run("redis", "6.0", nil)
 		if err != nil {
 			logger.Fatal("could not start resource", zap.Error(err))
 		}
