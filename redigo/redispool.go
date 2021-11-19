@@ -28,6 +28,13 @@ var (
 func GetRedisConnPool(config PoolConfiguration) *Pool {
 	once.Do(func() {
 		redisConnPool = getRedisConnPoolByDB(config)
+		for {
+			c, _ := redisConnPool.GetContext(context.Background())
+			if pong, _ := redis.String(c.Do("PING")); pong == "PONG" {
+				break
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
 	})
 	return redisConnPool
 }
