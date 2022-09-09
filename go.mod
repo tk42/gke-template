@@ -1,8 +1,9 @@
 module github.com/tk42/victolinux
 
-go 1.17
+go 1.19
 
 require (
+	github.com/deckarep/golang-set/v2 v2.1.0
 	github.com/gomodule/redigo v1.8.4
 	github.com/ory/dockertest/v3 v3.6.3
 	github.com/tommy351/zap-stackdriver v0.1.4
