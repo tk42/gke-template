@@ -126,11 +126,25 @@ func (l *Logger) Debug(msg string, fields ...zapcore.Field) {
 	l.Logger.Debug(msg, fields...)
 }
 
+func (l *Logger) Debugf(msg string, fields ...interface{}) {
+	if !l.isDebugEnabled {
+		return
+	}
+	l.Logger.Sugar().Debugf(msg, fields...)
+}
+
 func (l *Logger) Info(msg string, fields ...zapcore.Field) {
 	if !l.isInfoEnabled {
 		return
 	}
 	l.Logger.Info(msg, fields...)
+}
+
+func (l *Logger) Infof(msg string, fields ...interface{}) {
+	if !l.isInfoEnabled {
+		return
+	}
+	l.Logger.Sugar().Infof(msg, fields...)
 }
 
 func (l *Logger) Warn(msg string, fields ...zapcore.Field) {
@@ -141,12 +155,28 @@ func (l *Logger) Warn(msg string, fields ...zapcore.Field) {
 	l.Logger.Warn(msg, fields...)
 }
 
+func (l *Logger) Warningf(msg string, fields ...interface{}) {
+	l.throttler.Trigger()
+	if l.throttler.IsFreeze() {
+		return
+	}
+	l.Logger.Sugar().Warnf(msg, fields...)
+}
+
 func (l *Logger) Error(msg string, fields ...zapcore.Field) {
 	l.throttler.Trigger()
 	if l.throttler.IsFreeze() {
 		return
 	}
 	l.Logger.Error(msg, fields...)
+}
+
+func (l *Logger) Errorf(msg string, fields ...interface{}) {
+	l.throttler.Trigger()
+	if l.throttler.IsFreeze() {
+		return
+	}
+	l.Logger.Sugar().Errorf(msg, fields...)
 }
 
 func (l *Logger) Panic(msg string, fields ...zapcore.Field) {
